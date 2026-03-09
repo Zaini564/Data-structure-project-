@@ -1,0 +1,301 @@
+#include <iostream>
+using namespace std;
+
+class Person {
+public:
+    string name;
+    Person* next;
+
+    Person(string n) {
+        name = n;
+        next = NULL;
+    }
+};
+
+class Event {
+public:
+    string name;
+    string date;
+    string place;
+
+    Person* startP;   // start of participants queue
+    Person* rearP;    // rear of queue
+
+    Event* next;
+
+    Event(string n, string d, string p) {
+        name = n;
+        date = d;
+        place = p;
+        startP = rearP = NULL;
+        next = NULL;
+    }
+};
+
+class Organizer {
+private:
+    Event* start;   // start of linked list
+
+public:
+    Organizer() {
+        start = NULL;
+    }
+
+    // Add Event
+    void addEvent(string n, string d, string p) {
+        Event* temp = new Event(n, d, p);
+
+        if (start == NULL) {
+            start = temp;
+        } else {
+            Event* cur = start;
+            while (cur->next != NULL) {
+                cur = cur->next;
+            }
+            cur->next = temp;
+        }
+
+        cout << "Event Added!\n";
+    }
+
+    // Show Events
+    void showEvents() {
+        Event* cur = start;
+
+        if (cur == NULL) {
+            cout << "No Events Available.\n";
+            return;
+        }
+
+        while (cur != NULL) {
+            cout << "\nEvent: " << cur->name;
+            cout << "\nDate: " << cur->date;
+            cout << "\nPlace: " << cur->place << endl;
+            cur = cur->next;
+        }
+    }
+
+    // Find Event
+    Event* findEvent(string n) {
+        Event* cur = start;
+
+        while (cur != NULL) {
+            if (cur->name == n)
+                return cur;
+            cur = cur->next;
+        }
+        return NULL;
+    }
+
+    // Delete Event
+    void deleteEvent(string eventName) {
+        if (start == NULL) {
+            cout << "No Events to Delete.\n";
+            return;
+        }
+
+        Event* cur = start;
+        Event* prev = NULL;
+
+        while (cur != NULL && cur->name != eventName) {
+            prev = cur;
+            cur = cur->next;
+        }
+
+        if (cur == NULL) {
+            cout << "Event Not Found!\n";
+            return;
+        }
+
+        // Delete all participants
+        Person* p = cur->startP;
+        while (p != NULL) {
+            Person* temp = p;
+            p = p->next;
+            delete temp;
+        }
+
+        // Remove event from linked list
+        if (prev == NULL) {
+            start = cur->next;
+        } else {
+            prev->next = cur->next;
+        }
+
+        delete cur;
+        cout << "Event Deleted!\n";
+    }
+
+    // Add Participant (Enqueue)
+    void addPerson(string eventName, string personName) {
+        Event* e = findEvent(eventName);
+
+        if (e == NULL) {
+            cout << "Event Not Found!\n";
+            return;
+        }
+
+        Person* temp = new Person(personName);
+
+        if (e->startP == NULL) {
+            e->startP = e->rearP = temp;
+        } else {
+            e->rearP->next = temp;
+            e->rearP = temp;
+        }
+
+        cout << "Person Added!\n";
+    }
+
+    // Show Participants
+    void showPersons(string eventName) {
+        Event* e = findEvent(eventName);
+
+        if (e == NULL) {
+            cout << "Event Not Found!\n";
+            return;
+        }
+
+        Person* cur = e->startP;
+
+        if (cur == NULL) {
+            cout << "No Participants.\n";
+            return;
+        }
+
+        cout << "\nParticipants:\n";
+        while (cur != NULL) {
+            cout << cur->name << endl;
+            cur = cur->next;
+        }
+    }
+
+    // Delete Participant
+    void deletePerson(string eventName, string personName) {
+        Event* e = findEvent(eventName);
+        if (e == NULL) {
+            cout << "Event Not Found!\n";
+            return;
+        }
+
+        if (e->startP == NULL) {
+            cout << "No Participants to Delete.\n";
+            return;
+        }
+
+        Person* cur = e->startP;
+        Person* prev = NULL;
+
+        while (cur != NULL && cur->name != personName) {
+            prev = cur;
+            cur = cur->next;
+        }
+
+        if (cur == NULL) {
+            cout << "Participant Not Found!\n";
+            return;
+        }
+
+        if (prev == NULL) {  // deleting first participant
+            e->startP = cur->next;
+            if (cur == e->rearP) e->rearP = NULL; // if it was the only participant
+        } else {
+            prev->next = cur->next;
+            if (cur == e->rearP) e->rearP = prev;
+        }
+
+        delete cur;
+        cout << "Participant Deleted!\n";
+    }
+};
+
+int main() {
+    Organizer obj;
+    int choice;
+    string name, date, place, person;
+
+    do {
+        cout << "\n==============================";
+        cout << "\n      EVENT MANAGEMENT        ";
+        cout << "\n==============================";
+        cout << "\n1. Add Event";
+        cout << "\n2. Show Events";
+        cout << "\n3. Delete Event";
+        cout << "\n4. Manage Participants";
+        cout << "\n5. Exit";
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+
+        case 1:
+            cout << "\n--- Add New Event ---\n";
+            cout << "Event Name: ";
+            getline(cin, name);
+            cout << "Date: ";
+            getline(cin, date);
+            cout << "Place: ";
+            getline(cin, place);
+            obj.addEvent(name, date, place);
+            break;
+
+        case 2:
+            cout << "\n--- All Events ---\n";
+            obj.showEvents();
+            break;
+
+        case 3:
+            cout << "\n--- Delete Event ---\n";
+            cout << "Event Name: ";
+            getline(cin, name);
+            obj.deleteEvent(name);
+            break;
+
+        case 4: {
+            int subChoice;
+            cout << "\n--- Participant Menu ---\n";
+            cout << "1. Add Person\n";
+            cout << "2. Show Participants\n";
+            cout << "3. Delete Person\n";
+            cout << "Enter Choice: ";
+            cin >> subChoice;
+            cin.ignore();
+
+            if (subChoice == 1) {
+                cout << "Event Name: ";
+                getline(cin, name);
+                cout << "Person Name: ";
+                getline(cin, person);
+                obj.addPerson(name, person);
+            }
+            else if (subChoice == 2) {
+                cout << "Event Name: ";
+                getline(cin, name);
+                obj.showPersons(name);
+            }
+            else if (subChoice == 3) {
+                cout << "Event Name: ";
+                getline(cin, name);
+                cout << "Participant Name: ";
+                getline(cin, person);
+                obj.deletePerson(name, person);
+            }
+            else {
+                cout << "Wrong Choice in Participant Menu!\n";
+            }
+            break;
+        }
+
+        case 5:
+            cout << "Good Bye!\n";
+            break;
+
+        default:
+            cout << "Wrong Choice!\n";
+        }
+
+    } while (choice != 5);
+
+    return 0;
+}
